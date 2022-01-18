@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import F, Q
 
 User = get_user_model()
 
@@ -54,6 +55,9 @@ class Follow(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'following'],
                 name='unique_follow'),
+            models.CheckConstraint(
+                check=~Q(user=F('following')),
+                name='user_not_following')
         ]
 
     def __str__(self):
