@@ -21,42 +21,50 @@ class CreateListViewSet(mixins.CreateModelMixin,
 
 
 class PostViewSet(viewsets.ModelViewSet):
+    """Viewset для модели Post."""
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly)
     pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
+        """Переопределяем сохранение автора."""
         serializer.save(author=self.request.user)
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
+    """Viewset для модели Group."""
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Viewset для модели Comment."""
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly)
 
     def get_queryset(self):
+        """Получаем queryset комментов к посту с нужным id."""
         post = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
         new_queryset = post.comments.all()
         return new_queryset
 
     def perform_create(self, serializer):
+        """Переопределяем сохранение автора и id поста."""
         post_id = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
         serializer.save(author=self.request.user, post=post_id)
 
 
 class FollowViewSet(CreateListViewSet):
+    """Viewset для модели Follow."""
     serializer_class = FollowSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['user__username', 'following__username']
 
     def get_queryset(self):
+        """Получаем queryset авторов, на кого подписан user."""
         user = self.request.user
         return user.follower.all()
 
